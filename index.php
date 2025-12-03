@@ -1,38 +1,85 @@
 <?php
 // ==========================================
-// कॉन्फ़िगरेशन (यहाँ अपनी लिंक डालें)
+// CONFIGURATION (SETTINGS)
 // ==========================================
 
-// नीचे "PASTE_YOUR_EARNLINK_HERE" हटाकर अपनी Earnlink वाली छोटी लिंक डालें
+// 1. Secret Key (Yeh WAHI honi chahiye jo C++ Code me hai: "Vm8Lk...")
+$secret_key = "Vm8Lk7Uj2JmsjCPVPVjrLa7zgfx3uz9E"; 
+
+// 2. Shortlink URL
 $shortlink_url = "https://earnlinks.in/mL7p"; 
 
-// जहाँ कीज़ सेव होंगी
+// 3. Database File (Jahan keys save hongi)
 $key_file = "keys.txt"; 
 
 // ==========================================
-// लॉजिक (Logic)
+// PART 1: APP LOGIN API (C++ Connection)
+// ==========================================
+
+// Agar App se Request aayi hai (POST request with user_key)
+if (isset($_POST['user_key']) && isset($_POST['serial'])) {
+    
+    header('Content-Type: application/json');
+    
+    $user_key = $_POST['user_key'];
+    $serial = $_POST['serial']; // UUID from App
+    $game = $_POST['game'] ?? 'Unknown';
+
+    // Step A: Check karein ki Key database (keys.txt) me exist karti hai ya nahi
+    $file_content = file_exists($key_file) ? file_get_contents($key_file) : "";
+    
+    // Ham check kar rahe hain ki kya user_key file ke andar likhi hui hai?
+    if (strpos($file_content, $user_key) !== false) {
+        
+        // Step B: Agar Key Valid hai, to Token Generate karo (MD5 Logic)
+        // Formula: PUBG-KEY-UUID-SECRET (Same as C++)
+        $auth_string = "PUBG-" . $user_key . "-" . $serial . "-" . $secret_key;
+        $token = md5($auth_string);
+        
+        $response = [
+            "status" => true,
+            "data" => [
+                "token" => $token,           // Login Token
+                "rng" => time(),             // Time
+                "EXP" => "Access Granted"    // Expiry Text
+            ]
+        ];
+    } else {
+        // Step C: Agar Key Valid nahi hai
+        $response = [
+            "status" => false,
+            "reason" => "Key Invalid or Not Found in Database!"
+        ];
+    }
+    
+    echo json_encode($response);
+    exit(); // Yahin ruk jao, niche ka HTML mat dikhao
+}
+
+// ==========================================
+// PART 2: WEBSITE UI (Browser View)
 // ==========================================
 
 $generated_key = "";
 $show_key = false;
 
-// चेक करें कि क्या यूज़र शॉर्टलिंक पूरा करके वापस आया है?
+// Check karein ki user Shortlink complete karke aaya hai ya nahi
 if (isset($_GET['completed']) && $_GET['completed'] == 'yes') {
     $show_key = true;
 
-    // रैंडम की जेनरेट करने का फंक्शन
     function generateRandomString($length = 4) {
         return strtoupper(substr(bin2hex(random_bytes($length)), 0, $length));
     }
     
-    // की का फॉर्मेट (जैसे: KEY-XXXX-XXXX-XXXX)
+    // Key Generate karo
     $generated_key = "SAURABHXMOD-" . generateRandomString(4) . "-" . generateRandomString(4) . "-" . generateRandomString(4);
     
-    // की को फाइल में सेव करें (रिकॉर्ड के लिए)
-    $entry = $generated_key . " | IP: " . $_SERVER['REMOTE_ADDR'] . " | Time: " . date("Y-m-d H:i:s") . "\n";
+    // Key ko File me Save karo (Taaki App login kar paye)
+    $entry = $generated_key . " | IP: " . $_SERVER['REMOTE_ADDR'] . " | Date: " . date("Y-m-d H:i:s") . "\n";
     file_put_contents($key_file, $entry, FILE_APPEND);
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,9 +87,8 @@ if (isset($_GET['completed']) && $_GET['completed'] == 'yes') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Key Generator</title>
     <style>
-        /* यह CSS उस साइट जैसा डार्क थीम देगी */
         body {
-            background-color: #0a0a0a; /* गहरा काला बैकग्राउंड */
+            background-color: #0a0a0a;
             color: #e0e0e0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
@@ -52,10 +98,10 @@ if (isset($_GET['completed']) && $_GET['completed'] == 'yes') {
             margin: 0;
         }
         .container {
-            background: #111111; /* कार्ड का बैकग्राउंड */
+            background: #111111;
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); /* हल्का हरा ग्लो */
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
             text-align: center;
             max-width: 400px;
             width: 90%;
@@ -67,9 +113,7 @@ if (isset($_GET['completed']) && $_GET['completed'] == 'yes') {
             color: #fff;
             letter-spacing: 1px;
         }
-        .accent { color: #00ff88; } /* हरा रंग हाइलाइट के लिए */
-        
-        /* की दिखाने वाला बॉक्स */
+        .accent { color: #00ff88; }
         .key-display-box {
             background: #000;
             border: 2px dashed #00ff88;
@@ -84,8 +128,6 @@ if (isset($_GET['completed']) && $_GET['completed'] == 'yes') {
             letter-spacing: 2px;
             position: relative;
         }
-
-        /* बटन का डिज़ाइन */
         .btn-generate {
             display: inline-block;
             background: linear-gradient(45deg, #00ff88, #00b862);
@@ -125,7 +167,7 @@ if (isset($_GET['completed']) && $_GET['completed'] == 'yes') {
             <?php echo $generated_key; ?>
         </div>
         <p class="info-text">Copy this key and use it in the application.</p>
-        <a href="god.php" style="color: #00ff88; text-decoration: none; margin-top: 20px; display: block;">Generate Another</a>
+        <a href="index.php" style="color: #00ff88; text-decoration: none; margin-top: 20px; display: block;">Generate Another</a>
 
     <?php else: ?>
         <div class="status-icon">🛡️</div>
