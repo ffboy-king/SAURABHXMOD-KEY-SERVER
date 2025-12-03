@@ -4,7 +4,7 @@
 // ==========================================
 
 // नीचे "PASTE_YOUR_EARNLINK_HERE" हटाकर अपनी Earnlink वाली छोटी लिंक डालें
-$shortlink_url = "PASTE_YOUR_EARNLINK_HERE"; 
+$shortlink_url = "https://earnlinks.in/mL7p"; 
 
 // जहाँ कीज़ सेव होंगी
 $key_file = "keys.txt"; 
@@ -26,7 +26,7 @@ if (isset($_GET['completed']) && $_GET['completed'] == 'yes') {
     }
     
     // की का फॉर्मेट (जैसे: KEY-XXXX-XXXX-XXXX)
-    $generated_key = "KEY-" . generateRandomString(4) . "-" . generateRandomString(4) . "-" . generateRandomString(4);
+    $generated_key = "SAURABHXMOD-" . generateRandomString(4) . "-" . generateRandomString(4) . "-" . generateRandomString(4);
     
     // की को फाइल में सेव करें (रिकॉर्ड के लिए)
     $entry = $generated_key . " | IP: " . $_SERVER['REMOTE_ADDR'] . " | Time: " . date("Y-m-d H:i:s") . "\n";
